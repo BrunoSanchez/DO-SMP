@@ -22,6 +22,7 @@ class SMPRunStubTest(unittest.TestCase):
         self.assertEqual(stub.user_id, "desc-user")
         self.assertEqual(stub.status, "draft")
         self.assertTrue(stub.run_id)
+        self.assertEqual(len(stub.run_id), 64)
         self.assertEqual(sorted(stub.outputs), sorted(DEFAULT_OUTPUT_CATEGORIES))
 
     def test_yaml_contains_reproducibility_sections(self) -> None:
@@ -107,6 +108,16 @@ class SMPRunStubTest(unittest.TestCase):
 
         self.assertEqual(registry.names(), ["adapter-a"])
         self.assertIs(registry.get("adapter-a"), adapter)
+
+    def test_to_dict_returns_deep_copy(self) -> None:
+        stub = SMPRunStub.create(
+            user_id="desc-user",
+            configuration={"nested": {"bands": ["g", "r"]}},
+        )
+        exported = stub.to_dict()
+        exported["configuration"]["nested"]["bands"].append("i")
+
+        self.assertEqual(stub.configuration["nested"]["bands"], ["g", "r"])
 
 
 if __name__ == "__main__":

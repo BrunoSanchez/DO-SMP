@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 import hashlib
@@ -42,11 +43,16 @@ def _normalize_scalar(value: Any) -> str:
     return text
 
 
-def _normalize_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return sorted(
-        (dict(record) for record in records),
-        key=lambda record: json.dumps(record, sort_keys=True, separators=(",", ":")),
-    )
+def _canonicalize_for_hash(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {
+            key: _canonicalize_for_hash(item)
+            for key, item in sorted(value.items(), key=lambda pair: str(pair[0]))
+        }
+    if isinstance(value, list):
+        items = [_canonicalize_for_hash(item) for item in value]
+        return sorted(items, key=lambda item: json.dumps(item, sort_keys=True, separators=(",", ":")))
+    return value
 
 
 def _to_yaml_lines(value: Any, indent: int = 0) -> list[str]:
@@ -132,18 +138,20 @@ class SMPRunStub:
             "schema_version": "0.1.0",
             "user_id": user_id,
             "status": status,
-            "notes": sorted(notes or []),
+            "notes": notes or [],
             "configuration": configuration or {},
-            "software": _normalize_records(software or []),
+            "software": software or [],
             "input_data": input_data or {},
-            "targets": _normalize_records(targets or []),
+            "targets": targets or [],
             "auxiliary": auxiliary or {},
             "environment": environment or {},
             "engine": engine or {},
         }
         run_id = hashlib.sha256(
-            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-        ).hexdigest()[:12]
+            json.dumps(_canonicalize_for_hash(payload), sort_keys=True, separators=(",", ":")).encode(
+                "utf-8"
+            )
+        ).hexdigest()
 
         return cls(
             schema_version="0.1.0",
@@ -152,14 +160,14 @@ class SMPRunStub:
             updated_at=created_at,
             user_id=user_id,
             status=status,
-            notes=list(notes or []),
-            configuration=dict(configuration or {}),
-            software=[dict(component) for component in (software or [])],
-            input_data=dict(input_data or {}),
-            targets=[dict(target) for target in (targets or [])],
-            auxiliary=dict(auxiliary or {}),
-            environment=dict(environment or {}),
-            engine=dict(engine or {}),
+            notes=copy.deepcopy(notes or []),
+            configuration=copy.deepcopy(configuration or {}),
+            software=copy.deepcopy(software or []),
+            input_data=copy.deepcopy(input_data or {}),
+            targets=copy.deepcopy(targets or []),
+            auxiliary=copy.deepcopy(auxiliary or {}),
+            environment=copy.deepcopy(environment or {}),
+            engine=copy.deepcopy(engine or {}),
         )
 
     def add_output(self, category: str, **metadata: Any) -> None:
@@ -169,26 +177,27 @@ class SMPRunStub:
         self.updated_at = _utc_now()
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        return copy.deepcopy(
+            {
             "schema_version": self.schema_version,
             "run_id": self.run_id,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
             "user_id": self.user_id,
             "status": self.status,
-            "notes": list(self.notes),
-            "configuration": dict(self.configuration),
-            "software": [dict(component) for component in self.software],
-            "input_data": dict(self.input_data),
-            "targets": [dict(target) for target in self.targets],
-            "auxiliary": dict(self.auxiliary),
-            "environment": dict(self.environment),
-            "engine": dict(self.engine),
+            "notes": self.notes,
+            "configuration": self.configuration,
+            "software": self.software,
+            "input_data": self.input_data,
+            "targets": self.targets,
+            "auxiliary": self.auxiliary,
+            "environment": self.environment,
+            "engine": self.engine,
             "outputs": {
-                category: [dict(item) for item in items]
-                for category, items in self.outputs.items()
+                category: items for category, items in self.outputs.items()
             },
         }
+        )
 
     def to_yaml(self) -> str:
         return "\n".join(_to_yaml_lines(self.to_dict())) + "\n"
