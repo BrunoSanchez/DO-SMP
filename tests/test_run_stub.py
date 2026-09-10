@@ -75,6 +75,7 @@ class SMPRunStubTest(unittest.TestCase):
         reordered_kwargs = {
             **kwargs,
             "software": list(reversed(kwargs["software"])),
+            "targets": list(reversed(kwargs["targets"])),
         }
 
         with patch(

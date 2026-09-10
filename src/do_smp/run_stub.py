@@ -151,7 +151,7 @@ class SMPRunStub:
             "configuration": configuration or {},
             "software": _sorted_canonical_list(software or []),
             "input_data": input_data or {},
-            "targets": targets or [],
+            "targets": _sorted_canonical_list(targets or []),
             "auxiliary": auxiliary or {},
             "environment": environment or {},
             "engine": engine or {},

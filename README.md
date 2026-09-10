@@ -25,7 +25,7 @@ Modeling Photometry (SMP) runs:
 
 ```bash
 cd <repo-root>
-PYTHONPATH=src python -m do_smp --user-id your-user-id --engine generic-smp
+PYTHONPATH=src python -m do_smp --user-id your-user-id --engine generic-smp --engine-version 0.1.0
 ```
 
 The command prints a YAML stub that can be versioned alongside SMP processing
