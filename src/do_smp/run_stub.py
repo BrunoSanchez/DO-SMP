@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import math
+import re
 from typing import Any, Mapping
 
 
@@ -33,6 +34,7 @@ YAML_AMBIGUOUS_STRINGS = {
     ".inf",
     "-.inf",
 }
+VERSION_LIKE_STRING = re.compile(r"^\d+(?:\.\d+)+$")
 
 
 def _utc_now() -> str:
@@ -47,9 +49,7 @@ def _normalize_scalar(value: Any) -> str:
     if isinstance(value, int):
         return str(value)
     if isinstance(value, float):
-        if not math.isfinite(value):
-            return json.dumps(str(value))
-        return str(value)
+        return json.dumps(repr(value))
 
     text = str(value)
     if (
@@ -58,6 +58,7 @@ def _normalize_scalar(value: Any) -> str:
         or "\n" in text
         or any(character in text for character in ":#{}[]&*!|>'\"%@`")
         or text.lower() in YAML_AMBIGUOUS_STRINGS
+        or VERSION_LIKE_STRING.fullmatch(text) is not None
     ):
         return json.dumps(text)
     return text
@@ -77,8 +78,16 @@ def _canonicalize_for_hash(value: Any) -> Any:
 
 
 def _sorted_canonical_list(values: list[Any]) -> list[Any]:
-    items = [_canonicalize_for_hash(item) for item in values]
-    return sorted(items, key=lambda item: json.dumps(item, sort_keys=True, separators=(",", ":")))
+    decorated = []
+    for item in values:
+        canonical_item = _canonicalize_for_hash(item)
+        decorated.append(
+            (
+                json.dumps(canonical_item, sort_keys=True, separators=(",", ":")),
+                canonical_item,
+            )
+        )
+    return [canonical_item for _, canonical_item in sorted(decorated, key=lambda pair: pair[0])]
 
 
 def _to_yaml_lines(value: Any, indent: int = 0) -> list[str]:
@@ -163,7 +172,6 @@ class SMPRunStub:
         payload = {
             "schema_version": "0.1.0",
             "user_id": user_id,
-            "status": status,
             "notes": notes or [],
             "configuration": configuration or {},
             "software": _sorted_canonical_list(software or []),

@@ -174,7 +174,7 @@ class SMPRunStubTest(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertIn("status: queued", output)
         self.assertIn("name: scene-modeler", output)
-        self.assertIn("version: 2.1.0", output)
+        self.assertIn('version: "2.1.0"', output)
         self.assertIn("- first", output)
         self.assertIn("- second", output)
 
