@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 
 from .adapters import GenericSMPAdapter
 
@@ -30,5 +31,5 @@ def main(argv: list[str] | None = None) -> int:
         notes=args.note,
         status=args.status,
     )
-    print(stub.to_yaml())
+    sys.stdout.write(stub.to_yaml())
     return 0

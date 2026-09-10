@@ -42,6 +42,13 @@ def _normalize_scalar(value: Any) -> str:
     return text
 
 
+def _normalize_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return sorted(
+        (dict(record) for record in records),
+        key=lambda record: json.dumps(record, sort_keys=True, separators=(",", ":")),
+    )
+
+
 def _to_yaml_lines(value: Any, indent: int = 0) -> list[str]:
     prefix = " " * indent
 
@@ -51,15 +58,16 @@ def _to_yaml_lines(value: Any, indent: int = 0) -> list[str]:
 
         lines: list[str] = []
         for key, item in value.items():
+            rendered_key = _normalize_scalar(str(key))
             if isinstance(item, (Mapping, list)):
                 if not item:
                     empty = "{}" if isinstance(item, Mapping) else "[]"
-                    lines.append(f"{prefix}{key}: {empty}")
+                    lines.append(f"{prefix}{rendered_key}: {empty}")
                 else:
-                    lines.append(f"{prefix}{key}:")
+                    lines.append(f"{prefix}{rendered_key}:")
                     lines.extend(_to_yaml_lines(item, indent + 2))
             else:
-                lines.append(f"{prefix}{key}: {_normalize_scalar(item)}")
+                lines.append(f"{prefix}{rendered_key}: {_normalize_scalar(item)}")
         return lines
 
     if isinstance(value, list):
@@ -124,11 +132,11 @@ class SMPRunStub:
             "schema_version": "0.1.0",
             "user_id": user_id,
             "status": status,
-            "notes": notes or [],
+            "notes": sorted(notes or []),
             "configuration": configuration or {},
-            "software": software or [],
+            "software": _normalize_records(software or []),
             "input_data": input_data or {},
-            "targets": targets or [],
+            "targets": _normalize_records(targets or []),
             "auxiliary": auxiliary or {},
             "environment": environment or {},
             "engine": engine or {},

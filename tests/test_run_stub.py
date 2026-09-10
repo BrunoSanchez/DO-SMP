@@ -58,13 +58,22 @@ class SMPRunStubTest(unittest.TestCase):
         kwargs = {
             "user_id": "desc-user",
             "configuration": {"config_uri": "configs/run.yaml"},
-            "software": [{"name": "smp-core", "version": "1.2.3"}],
+            "software": [
+                {"name": "adapter-b", "version": "2.0.0"},
+                {"name": "adapter-a", "version": "1.0.0"},
+            ],
             "input_data": {"dataset": "DR1"},
-            "targets": [{"name": "SN2026abc"}],
+            "targets": [{"name": "SN2026xyz"}, {"name": "SN2026abc"}],
             "auxiliary": {"ticket": "DESC-42"},
-            "notes": ["review pending"],
+            "notes": ["review pending", "draft"],
             "environment": {"python": "3.12"},
             "engine": {"name": "smp-core", "version": "1.2.3"},
+        }
+        reordered_kwargs = {
+            **kwargs,
+            "software": list(reversed(kwargs["software"])),
+            "targets": list(reversed(kwargs["targets"])),
+            "notes": list(reversed(kwargs["notes"])),
         }
 
         with patch(
@@ -72,10 +81,24 @@ class SMPRunStubTest(unittest.TestCase):
             side_effect=["2026-01-01T00:00:00Z", "2026-01-02T00:00:00Z"],
         ):
             first = SMPRunStub.create(**kwargs)
-            second = SMPRunStub.create(**kwargs)
+            second = SMPRunStub.create(**reordered_kwargs)
 
         self.assertNotEqual(first.created_at, second.created_at)
         self.assertEqual(first.run_id, second.run_id)
+
+    def test_yaml_quotes_special_keys_and_nested_values(self) -> None:
+        stub = SMPRunStub.create(
+            user_id="desc-user",
+            configuration={"config:uri": "configs/run:1.yaml", " key ": " value "},
+            input_data={"inputs": [{"uri": "s3://bucket/file.fits", "tag": "raw:data"}]},
+        )
+
+        yaml_output = stub.to_yaml()
+
+        self.assertIn('"config:uri": "configs/run:1.yaml"', yaml_output)
+        self.assertIn('" key ": " value "', yaml_output)
+        self.assertIn("inputs:\n    -\n      uri: \"s3://bucket/file.fits\"", yaml_output)
+        self.assertIn('tag: "raw:data"', yaml_output)
 
     def test_adapter_registry_returns_registered_adapter(self) -> None:
         adapter = GenericSMPAdapter(name="adapter-a", version="1.0.0")
