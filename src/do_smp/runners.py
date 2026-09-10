@@ -65,6 +65,7 @@ class SlurmRunner(SMPRunner):
         time_limit: str = "01:00:00",
         nodes: int = 1,
         tasks_per_node: int = 1,
+        pythonpath: str | None = None,
     ) -> None:
         self.account = account
         self.qos = qos
@@ -72,6 +73,7 @@ class SlurmRunner(SMPRunner):
         self.time_limit = time_limit
         self.nodes = nodes
         self.tasks_per_node = tasks_per_node
+        self.pythonpath = pythonpath
 
     def render_job_script(self, stub: SMPRunStub, *, run_stub_path: str) -> str:
         job_name = f"smp-{stub.run_id[:12]}"
@@ -88,10 +90,15 @@ class SlurmRunner(SMPRunner):
             "set -euo pipefail",
             f"export DO_SMP_RUN_ID={shlex.quote(stub.run_id)}",
             f"export DO_SMP_ENGINE={shlex.quote(str(stub.engine.get('name', 'unknown')))}",
-            "export PYTHONPATH=src${PYTHONPATH:+:$PYTHONPATH}",
-            f"srun python -m do_smp run --run-stub {shlex.quote(run_stub_path)}",
-            "",
         ]
+        if self.pythonpath is not None:
+            lines.append(f"export PYTHONPATH={shlex.quote(self.pythonpath)}${{PYTHONPATH:+:$PYTHONPATH}}")
+        lines.extend(
+            [
+                f"srun python -m do_smp run --run-stub {shlex.quote(run_stub_path)}",
+                "",
+            ]
+        )
         return "\n".join(lines)
 
     def prepare_launch(self, stub: SMPRunStub, *, run_stub_path: str) -> RunnerLaunch:

@@ -87,7 +87,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     argv = [] if argv is None else list(argv)
-    if not argv or argv[0] not in {"stub", "run"}:
+    if argv and argv[0] not in {"stub", "run", "-h", "--help"}:
         argv = ["stub", *argv]
 
     parser = build_parser()
