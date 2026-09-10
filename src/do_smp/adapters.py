@@ -9,6 +9,7 @@ from typing import Any, Mapping
 from .run_stub import SMPRunStub
 from .standards import (
     DEFAULT_OUTPUT_CATEGORIES,
+    DEFAULT_PIPELINE_TYPE,
     DEFAULT_RUNNER_BACKENDS,
     SMPRunRequest,
 )
@@ -29,7 +30,7 @@ class SMPAdapter(ABC):
         *,
         user_id: str,
         created_by: str | None = None,
-        pipeline_type: str = "Scene Modeling Photometry (SMP)",
+        pipeline_type: str = DEFAULT_PIPELINE_TYPE,
         configuration: Mapping[str, Any] | None = None,
         software: list[Mapping[str, Any]] | None = None,
         input_data: Mapping[str, Any] | None = None,

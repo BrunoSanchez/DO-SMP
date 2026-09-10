@@ -11,7 +11,7 @@ import math
 import re
 from typing import Any, Mapping
 
-from .standards import DEFAULT_OUTPUT_CATEGORIES, RUN_STATUSES
+from .standards import DEFAULT_OUTPUT_CATEGORIES, DEFAULT_PIPELINE_TYPE, RUN_STATUSES
 
 YAML_AMBIGUOUS_STRINGS = {
     "",
@@ -187,7 +187,7 @@ class SMPRunStub:
         *,
         user_id: str,
         created_by: str | None = None,
-        pipeline_type: str = "Scene Modeling Photometry (SMP)",
+        pipeline_type: str = DEFAULT_PIPELINE_TYPE,
         configuration: dict[str, Any] | None = None,
         software: list[dict[str, Any]] | None = None,
         input_data: dict[str, Any] | None = None,

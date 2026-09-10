@@ -86,8 +86,8 @@ class SlurmRunner(SMPRunner):
             f"#SBATCH --ntasks-per-node={self.tasks_per_node}",
             "",
             "set -euo pipefail",
-            f"export DO_SMP_RUN_ID={stub.run_id}",
-            f"export DO_SMP_ENGINE={stub.engine.get('name', 'unknown')}",
+            f"export DO_SMP_RUN_ID={shlex.quote(stub.run_id)}",
+            f"export DO_SMP_ENGINE={shlex.quote(str(stub.engine.get('name', 'unknown')))}",
             f"srun python -m do_smp run --run-stub {shlex.quote(run_stub_path)}",
             "",
         ]

@@ -17,93 +17,100 @@ from .standards import (
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Emit a reproducible SMP run stub.")
-    parser.add_argument(
+    parser = argparse.ArgumentParser(description="DO-SMP command line interface.")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    stub_parser = subparsers.add_parser("stub", help="Emit a reproducible SMP run stub")
+    stub_parser.add_argument(
         "--list-engines",
         action="store_true",
         help="List built-in SMP adapters and exit",
     )
-    parser.add_argument("--user-id", help="Collaborator or service user id")
-    parser.add_argument(
+    stub_parser.add_argument("--user-id", help="Collaborator or service user id")
+    stub_parser.add_argument(
         "--created-by",
         help="Human-readable creator label; defaults to --user-id",
     )
-    parser.add_argument("--engine", default="generic-smp", help="SMP engine name")
-    parser.add_argument("--engine-version", default="unknown", help="SMP engine version")
-    parser.add_argument(
+    stub_parser.add_argument("--engine", default="generic-smp", help="SMP engine name")
+    stub_parser.add_argument("--engine-version", default="unknown", help="SMP engine version")
+    stub_parser.add_argument(
         "--status",
         default="draft",
         choices=RUN_STATUSES,
         help="Initial run status",
     )
-    parser.add_argument(
+    stub_parser.add_argument(
         "--note",
         action="append",
         default=[],
         help="Optional note to include in the run stub",
     )
-    parser.add_argument("--config-uri", help="Configuration file or manifest URI")
-    parser.add_argument("--dataset-uri", help="Top-level input dataset URI")
-    parser.add_argument(
+    stub_parser.add_argument("--config-uri", help="Configuration file or manifest URI")
+    stub_parser.add_argument("--dataset-uri", help="Top-level input dataset URI")
+    stub_parser.add_argument(
         "--collection",
         action="append",
         default=[],
         help="Rubin Butler collection reference",
     )
-    parser.add_argument(
+    stub_parser.add_argument(
         "--template",
         action="append",
         default=[],
         help="Template or reference image URI",
     )
-    parser.add_argument(
+    stub_parser.add_argument(
         "--external-catalog",
         action="append",
         default=[],
         help="External catalog reference",
     )
-    parser.add_argument(
+    stub_parser.add_argument(
         "--target",
         action="append",
         default=[],
         help="Target identifier to include in the stub",
     )
-    parser.add_argument("--code-repository", help="Source repository URI")
-    parser.add_argument("--code-commit", help="Source commit hash")
-    parser.add_argument("--code-tag", help="Source tag or release")
-    parser.add_argument("--python-version", help="Python runtime version")
-    parser.add_argument("--lsst-stack-version", help="LSST stack version")
-    parser.add_argument("--registry-uri", help="Run registry location")
-    parser.add_argument("--archive-uri", help="Artifact archive location")
-    return parser
+    stub_parser.add_argument("--code-repository", help="Source repository URI")
+    stub_parser.add_argument("--code-commit", help="Source commit hash")
+    stub_parser.add_argument("--code-tag", help="Source tag or release")
+    stub_parser.add_argument("--python-version", help="Python runtime version")
+    stub_parser.add_argument("--lsst-stack-version", help="LSST stack version")
+    stub_parser.add_argument("--registry-uri", help="Run registry location")
+    stub_parser.add_argument("--archive-uri", help="Artifact archive location")
 
-
-def build_run_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Prepare execution metadata from a run stub.")
-    parser.add_argument("--run-stub", required=True, help="Path to the run stub YAML file")
+    run_parser = subparsers.add_parser("run", help="Prepare execution metadata from a run stub")
+    run_parser.add_argument("--run-stub", required=True, help="Path to the run stub YAML file")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     argv = [] if argv is None else list(argv)
-    if argv and argv[0] == "run":
-        args = build_run_parser().parse_args(argv[1:])
+    if not argv or argv[0] not in {"stub", "run"}:
+        argv = ["stub", *argv]
+
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
+    if args.command == "run":
         run_stub_path = Path(args.run_stub)
         if not run_stub_path.exists():
             raise SystemExit(f"Run stub not found: {run_stub_path}")
         sys.stdout.write(f"Prepared execution from {run_stub_path}\n")
         return 0
 
-    args = build_parser().parse_args(argv)
     registry = AdapterRegistry.with_builtin_adapters()
     if args.list_engines:
         sys.stdout.write("\n".join(registry.names()) + "\n")
         return 0
 
     if not args.user_id:
-        build_parser().error("--user-id is required unless --list-engines is used")
+        parser.error("--user-id is required unless --list-engines is used")
 
-    adapter = registry.create(args.engine, version=args.engine_version)
+    try:
+        adapter = registry.create(args.engine, version=args.engine_version)
+    except KeyError:
+        parser.error(f"unknown engine: {args.engine}")
     input_bundle = RubinInputBundle(
         butler_collections=args.collection,
         templates=args.template,

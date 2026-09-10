@@ -369,6 +369,10 @@ class SMPRunStubTest(unittest.TestCase):
         with self.assertRaises(SystemExit):
             cli.main(["--user-id", "desc-user", "--status", "unknown-status"])
 
+    def test_cli_rejects_unknown_engine(self) -> None:
+        with self.assertRaises(SystemExit):
+            cli.main(["--user-id", "desc-user", "--engine", "missing-engine"])
+
     def test_cli_run_subcommand_requires_existing_stub(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             stub_path = Path(tmp_dir) / "run.yaml"
