@@ -200,6 +200,21 @@ class SMPRunStubTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             stub.set_status("unknown-status")
 
+    def test_create_stub_can_limit_requested_output_categories(self) -> None:
+        stub = SMPRunStub.create(
+            user_id="desc-user",
+            requested_outputs=["light_curves", "diagnostics"],
+        )
+
+        self.assertEqual(sorted(stub.outputs), ["diagnostics", "light_curves"])
+
+    def test_create_stub_rejects_unknown_requested_output_categories(self) -> None:
+        with self.assertRaises(ValueError):
+            SMPRunStub.create(
+                user_id="desc-user",
+                requested_outputs=["light_curves", "bad-output"],
+            )
+
     def test_adapter_registry_returns_registered_adapter(self) -> None:
         registry = AdapterRegistry.with_builtin_adapters()
 

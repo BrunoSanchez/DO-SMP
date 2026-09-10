@@ -255,8 +255,11 @@ class SMPRunRequest:
         return _normalize_mapping(self.archival)
 
     def normalized_requested_outputs(self) -> list[str]:
-        requested = [category for category in self.requested_outputs if category in DEFAULT_OUTPUT_CATEGORIES]
-        return requested or list(DEFAULT_OUTPUT_CATEGORIES)
+        requested = self.requested_outputs or list(DEFAULT_OUTPUT_CATEGORIES)
+        unknown = sorted({category for category in requested if category not in DEFAULT_OUTPUT_CATEGORIES})
+        if unknown:
+            raise ValueError(f"Unsupported output categories: {', '.join(unknown)}")
+        return list(dict.fromkeys(requested))
 
     def to_metadata_dict(self) -> dict[str, Any]:
         return {

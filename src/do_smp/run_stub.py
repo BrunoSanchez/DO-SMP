@@ -209,10 +209,15 @@ class SMPRunStub:
         if status not in RUN_STATUSES:
             raise ValueError(f"Unsupported status: {status}")
 
-        requested_output_set = {
-            category for category in (requested_outputs or DEFAULT_OUTPUT_CATEGORIES)
-            if category in DEFAULT_OUTPUT_CATEGORIES
-        }
+        normalized_requested_outputs = list(requested_outputs or DEFAULT_OUTPUT_CATEGORIES)
+        invalid_requested_outputs = sorted(
+            {category for category in normalized_requested_outputs if category not in DEFAULT_OUTPUT_CATEGORIES}
+        )
+        if invalid_requested_outputs:
+            raise ValueError(
+                f"Unsupported output categories: {', '.join(invalid_requested_outputs)}"
+            )
+        normalized_requested_outputs = list(dict.fromkeys(normalized_requested_outputs))
         created_at = _utc_now()
         payload = {
             "schema_version": "0.1.0",
@@ -233,7 +238,7 @@ class SMPRunStub:
             "target_summary": target_summary or {},
             "provenance": provenance or {},
             "archival": archival or {},
-            "requested_outputs": sorted(requested_output_set),
+            "requested_outputs": normalized_requested_outputs,
             "extensions": extensions or {},
         }
         run_id = hashlib.sha256(
@@ -269,7 +274,7 @@ class SMPRunStub:
             provenance=copy.deepcopy(provenance or {}),
             archival=copy.deepcopy(archival or {}),
             extensions=copy.deepcopy(extensions or {}),
-            outputs={category: [] for category in DEFAULT_OUTPUT_CATEGORIES},
+            outputs={category: [] for category in normalized_requested_outputs},
         )
 
     def add_output(self, category: str, **metadata: Any) -> None:

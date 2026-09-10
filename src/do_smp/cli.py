@@ -85,7 +85,7 @@ def build_run_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    argv = list(argv or [])
+    argv = [] if argv is None else list(argv)
     if argv and argv[0] == "run":
         args = build_run_parser().parse_args(argv[1:])
         run_stub_path = Path(args.run_stub)
