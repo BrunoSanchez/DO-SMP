@@ -23,7 +23,7 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="List built-in SMP adapters and exit",
     )
-    parser.add_argument("--user-id", required=True, help="Collaborator or service user id")
+    parser.add_argument("--user-id", help="Collaborator or service user id")
     parser.add_argument(
         "--created-by",
         help="Human-readable creator label; defaults to --user-id",
@@ -100,9 +100,10 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.write("\n".join(registry.names()) + "\n")
         return 0
 
-    adapter = registry.get(args.engine)
-    adapter.version = args.engine_version
-    adapter.engine_version = args.engine_version
+    if not args.user_id:
+        build_parser().error("--user-id is required unless --list-engines is used")
+
+    adapter = registry.create(args.engine, version=args.engine_version)
     input_bundle = RubinInputBundle(
         butler_collections=args.collection,
         templates=args.template,

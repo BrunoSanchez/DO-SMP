@@ -42,7 +42,7 @@ runs to improve reproducibility and collaboration.
 List the built-in engines:
 
 ```bash
-PYTHONPATH=src python -m do_smp --user-id your-user-id --list-engines
+PYTHONPATH=src python -m do_smp --list-engines
 ```
 
 Generate a STARRED-flavored stub with Rubin and archival metadata:

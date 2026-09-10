@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+import shlex
 from typing import Any
 
 from .run_stub import SMPRunStub
@@ -87,7 +88,7 @@ class SlurmRunner(SMPRunner):
             "set -euo pipefail",
             f"export DO_SMP_RUN_ID={stub.run_id}",
             f"export DO_SMP_ENGINE={stub.engine.get('name', 'unknown')}",
-            f"srun python -m do_smp run --run-stub {run_stub_path}",
+            f"srun python -m do_smp run --run-stub {shlex.quote(run_stub_path)}",
             "",
         ]
         return "\n".join(lines)

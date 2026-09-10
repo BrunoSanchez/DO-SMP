@@ -241,6 +241,26 @@ class SMPRunStubTest(unittest.TestCase):
                 self.assertEqual(stub.target_summary["count"], 1)
                 self.assertEqual(stub.data_reference["butler_collections"], ["LSSTCam/runs/DP0.2"])
 
+    def test_adapter_deduplicates_built_in_software_entries(self) -> None:
+        adapter = StarredAdapter(version="2.1.0")
+        request = SMPRunRequest(
+            user_id="desc-user",
+            software=[
+                {"name": "starred", "version": "2.1.0", "role": "adapter"},
+                {"name": "STARRED", "version": "2.1.0", "role": "smp-engine"},
+            ],
+        )
+
+        stub = adapter.build_run_stub_from_request(request)
+
+        self.assertEqual(
+            stub.software,
+            [
+                {"name": "starred", "version": "2.1.0", "role": "adapter"},
+                {"name": "STARRED", "version": "2.1.0", "role": "smp-engine"},
+            ],
+        )
+
     def test_adapter_rejects_unknown_extension_namespace(self) -> None:
         adapter = GenericSMPAdapter()
         request = SMPRunRequest(
@@ -315,7 +335,7 @@ class SMPRunStubTest(unittest.TestCase):
 
     def test_cli_lists_builtin_engines(self) -> None:
         with patch("sys.stdout", new_callable=io.StringIO) as stdout:
-            exit_code = cli.main(["--user-id", "desc-user", "--list-engines"])
+            exit_code = cli.main(["--list-engines"])
 
         self.assertEqual(exit_code, 0)
         self.assertIn("starred", stdout.getvalue())
@@ -354,7 +374,7 @@ class SMPRunStubTest(unittest.TestCase):
         )
 
         runner = SlurmRunner(account="desc", qos="debug", partition="cpu")
-        launch = runner.prepare_launch(stub, run_stub_path="/abs/run.yaml")
+        launch = runner.prepare_launch(stub, run_stub_path="/abs/run stub.yaml")
         script = launch.metadata["job_script"]
 
         self.assertEqual(launch.backend, "slurm-perlmutter")
@@ -363,7 +383,7 @@ class SMPRunStubTest(unittest.TestCase):
         self.assertIn("#SBATCH --qos=debug", script)
         self.assertIn("#SBATCH --constraint=cpu", script)
         self.assertIn("NERSC Perlmutter", launch.metadata["site"])
-        self.assertIn("srun python -m do_smp run --run-stub /abs/run.yaml", script)
+        self.assertIn("srun python -m do_smp run --run-stub '/abs/run stub.yaml'", script)
 
 
 if __name__ == "__main__":

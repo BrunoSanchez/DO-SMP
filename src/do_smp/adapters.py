@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+import copy
 from typing import Any, Mapping
 
 from .run_stub import SMPRunStub
@@ -114,12 +115,21 @@ class SMPAdapter(ABC):
                 "role": "smp-engine",
             },
         ]
+        deduplicated_software: list[dict[str, Any]] = []
+        seen_indices: dict[tuple[Any, Any, Any], int] = {}
+        for record in software:
+            key = (record.get("name"), record.get("version"), record.get("role"))
+            if key in seen_indices:
+                deduplicated_software[seen_indices[key]] = copy.deepcopy(record)
+                continue
+            seen_indices[key] = len(deduplicated_software)
+            deduplicated_software.append(copy.deepcopy(record))
         return SMPRunStub.create(
             user_id=request.user_id,
             created_by=metadata["created_by"],
             pipeline_type=metadata["pipeline_type"],
             configuration=metadata["configuration"],
-            software=software,
+            software=deduplicated_software,
             input_data=metadata["input_data"],
             targets=metadata["targets"],
             auxiliary=metadata["auxiliary"],
@@ -200,6 +210,10 @@ class AdapterRegistry:
 
     def capabilities(self) -> dict[str, dict[str, Any]]:
         return {name: adapter.capabilities() for name, adapter in sorted(self._adapters.items())}
+
+    def create(self, name: str, *, version: str = "unknown") -> SMPAdapter:
+        prototype = self.get(name)
+        return type(prototype)(version=version)
 
     @classmethod
     def with_builtin_adapters(cls) -> "AdapterRegistry":

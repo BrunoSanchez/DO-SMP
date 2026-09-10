@@ -19,7 +19,6 @@ List the built-in engines
 .. code-block:: bash
 
    PYTHONPATH=src python -m do_smp \
-     --user-id your-user-id \
      --list-engines
 
 Add notes and an explicit status
