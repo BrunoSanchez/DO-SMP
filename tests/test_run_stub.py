@@ -1,6 +1,8 @@
+import io
 import unittest
 from unittest.mock import patch
 
+from do_smp import cli
 from do_smp.adapters import AdapterRegistry, GenericSMPAdapter
 from do_smp.run_stub import DEFAULT_OUTPUT_CATEGORIES, SMPRunStub
 
@@ -73,8 +75,6 @@ class SMPRunStubTest(unittest.TestCase):
         reordered_kwargs = {
             **kwargs,
             "software": list(reversed(kwargs["software"])),
-            "targets": list(reversed(kwargs["targets"])),
-            "notes": list(reversed(kwargs["notes"])),
         }
 
         with patch(
@@ -86,6 +86,18 @@ class SMPRunStubTest(unittest.TestCase):
 
         self.assertNotEqual(first.created_at, second.created_at)
         self.assertEqual(first.run_id, second.run_id)
+
+    def test_ordered_note_sequence_changes_run_id(self) -> None:
+        kwargs = {
+            "user_id": "desc-user",
+            "notes": ["first", "second"],
+            "software": [{"name": "adapter-a", "version": "1.0.0"}],
+        }
+
+        first = SMPRunStub.create(**kwargs)
+        second = SMPRunStub.create(**{**kwargs, "notes": ["second", "first"]})
+
+        self.assertNotEqual(first.run_id, second.run_id)
 
     def test_yaml_quotes_special_keys_and_nested_values(self) -> None:
         stub = SMPRunStub.create(
@@ -100,6 +112,17 @@ class SMPRunStubTest(unittest.TestCase):
         self.assertIn('" key ": " value "', yaml_output)
         self.assertIn("inputs:\n    -\n      uri: \"s3://bucket/file.fits\"", yaml_output)
         self.assertIn('tag: "raw:data"', yaml_output)
+
+    def test_yaml_quotes_non_finite_floats(self) -> None:
+        stub = SMPRunStub.create(
+            user_id="desc-user",
+            auxiliary={"nan_value": float("nan"), "inf_value": float("inf")},
+        )
+
+        yaml_output = stub.to_yaml()
+
+        self.assertIn('nan_value: "nan"', yaml_output)
+        self.assertIn('inf_value: "inf"', yaml_output)
 
     def test_adapter_registry_returns_registered_adapter(self) -> None:
         adapter = GenericSMPAdapter(name="adapter-a", version="1.0.0")
@@ -118,6 +141,34 @@ class SMPRunStubTest(unittest.TestCase):
         exported["configuration"]["nested"]["bands"].append("i")
 
         self.assertEqual(stub.configuration["nested"]["bands"], ["g", "r"])
+
+    def test_cli_main_emits_notes_and_engine_metadata(self) -> None:
+        with patch("sys.stdout", new_callable=io.StringIO) as stdout:
+            exit_code = cli.main(
+                [
+                    "--user-id",
+                    "desc-user",
+                    "--engine",
+                    "scene-modeler",
+                    "--engine-version",
+                    "2.1.0",
+                    "--status",
+                    "queued",
+                    "--note",
+                    "first",
+                    "--note",
+                    "second",
+                ]
+            )
+
+        output = stdout.getvalue()
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("status: queued", output)
+        self.assertIn("name: scene-modeler", output)
+        self.assertIn("version: 2.1.0", output)
+        self.assertIn("- first", output)
+        self.assertIn("- second", output)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 from typing import Any, Mapping
 
 
@@ -28,7 +29,11 @@ def _normalize_scalar(value: Any) -> str:
         return "null"
     if isinstance(value, bool):
         return "true" if value else "false"
-    if isinstance(value, (int, float)):
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            return json.dumps(str(value))
         return str(value)
 
     text = str(value)
@@ -50,9 +55,13 @@ def _canonicalize_for_hash(value: Any) -> Any:
             for key, item in sorted(value.items(), key=lambda pair: str(pair[0]))
         }
     if isinstance(value, list):
-        items = [_canonicalize_for_hash(item) for item in value]
-        return sorted(items, key=lambda item: json.dumps(item, sort_keys=True, separators=(",", ":")))
+        return [_canonicalize_for_hash(item) for item in value]
     return value
+
+
+def _sorted_canonical_list(values: list[Any]) -> list[Any]:
+    items = [_canonicalize_for_hash(item) for item in values]
+    return sorted(items, key=lambda item: json.dumps(item, sort_keys=True, separators=(",", ":")))
 
 
 def _to_yaml_lines(value: Any, indent: int = 0) -> list[str]:
@@ -140,7 +149,7 @@ class SMPRunStub:
             "status": status,
             "notes": notes or [],
             "configuration": configuration or {},
-            "software": software or [],
+            "software": _sorted_canonical_list(software or []),
             "input_data": input_data or {},
             "targets": targets or [],
             "auxiliary": auxiliary or {},
