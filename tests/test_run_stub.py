@@ -306,7 +306,7 @@ class SMPRunStubTest(unittest.TestCase):
 
         self.assertEqual(exit_code, 0)
         self.assertIn("status: queued", output)
-        self.assertIn('created_by: "jdoe (DESC)"', output)
+        self.assertIn("created_by: jdoe (DESC)", output)
         self.assertIn("name: STARRED", output)
         self.assertIn('version: "2.1.0"', output)
         self.assertIn("- first", output)
