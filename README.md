@@ -12,22 +12,19 @@ Modeling Photometry (SMP) runs:
   shared interface
 - output tracking for light-curves, model fits, summary tables, diagnostics,
   and generic artifacts
-- a checked-in YAML example at
-  `/home/runner/work/DO-SMP/DO-SMP/examples/smp-run.stub.yaml`
+- a checked-in YAML example at `examples/smp-run.stub.yaml`
 
 ## Layout
 
-- `/home/runner/work/DO-SMP/DO-SMP/src/do_smp/run_stub.py` - run metadata model
-- `/home/runner/work/DO-SMP/DO-SMP/src/do_smp/adapters.py` - adapter interface,
-  generic adapter, and registry
-- `/home/runner/work/DO-SMP/DO-SMP/src/do_smp/cli.py` - small CLI to emit a run
-  stub as YAML
-- `/home/runner/work/DO-SMP/DO-SMP/tests/test_run_stub.py` - focused unit tests
+- `src/do_smp/run_stub.py` - run metadata model
+- `src/do_smp/adapters.py` - adapter interface, generic adapter, and registry
+- `src/do_smp/cli.py` - small CLI to emit a run stub as YAML
+- `tests/test_run_stub.py` - focused unit tests
 
 ## Generate a stub
 
 ```bash
-cd /home/runner/work/DO-SMP/DO-SMP
+cd <repo-root>
 PYTHONPATH=src python -m do_smp --user-id your-user-id --engine generic-smp
 ```
 

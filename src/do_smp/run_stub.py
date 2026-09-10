@@ -124,6 +124,7 @@ class SMPRunStub:
             "schema_version": "0.1.0",
             "user_id": user_id,
             "status": status,
+            "notes": notes or [],
             "configuration": configuration or {},
             "software": software or [],
             "input_data": input_data or {},
@@ -131,7 +132,6 @@ class SMPRunStub:
             "auxiliary": auxiliary or {},
             "environment": environment or {},
             "engine": engine or {},
-            "created_at": created_at,
         }
         run_id = hashlib.sha256(
             json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")

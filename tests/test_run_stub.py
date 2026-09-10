@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from do_smp.adapters import AdapterRegistry, GenericSMPAdapter
 from do_smp.run_stub import DEFAULT_OUTPUT_CATEGORIES, SMPRunStub
@@ -52,6 +53,29 @@ class SMPRunStubTest(unittest.TestCase):
             "light_curves:",
         ):
             self.assertIn(section, yaml_output)
+
+    def test_identical_stable_inputs_keep_same_run_id(self) -> None:
+        kwargs = {
+            "user_id": "desc-user",
+            "configuration": {"config_uri": "configs/run.yaml"},
+            "software": [{"name": "smp-core", "version": "1.2.3"}],
+            "input_data": {"dataset": "DR1"},
+            "targets": [{"name": "SN2026abc"}],
+            "auxiliary": {"ticket": "DESC-42"},
+            "notes": ["review pending"],
+            "environment": {"python": "3.12"},
+            "engine": {"name": "smp-core", "version": "1.2.3"},
+        }
+
+        with patch(
+            "do_smp.run_stub._utc_now",
+            side_effect=["2026-01-01T00:00:00Z", "2026-01-02T00:00:00Z"],
+        ):
+            first = SMPRunStub.create(**kwargs)
+            second = SMPRunStub.create(**kwargs)
+
+        self.assertNotEqual(first.created_at, second.created_at)
+        self.assertEqual(first.run_id, second.run_id)
 
     def test_adapter_registry_returns_registered_adapter(self) -> None:
         adapter = GenericSMPAdapter(name="adapter-a", version="1.0.0")
