@@ -31,3 +31,14 @@ PYTHONPATH=src python -m do_smp --user-id your-user-id --engine generic-smp --en
 
 The command prints a YAML stub that can be versioned alongside SMP processing
 runs to improve reproducibility and collaboration.
+
+## Documentation
+
+Basic Sphinx documentation is available under `docs/`.
+
+```bash
+python -m pip install -r docs/requirements.txt
+make -C docs html
+```
+
+The rendered HTML entrypoint is `docs/build/html/index.html`.
