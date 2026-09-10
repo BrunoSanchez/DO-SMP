@@ -272,6 +272,7 @@ class SMPRunStubTest(unittest.TestCase):
                 self.assertEqual(stub.adapter["name"], adapter.name)
                 self.assertEqual(stub.target_summary["count"], 1)
                 self.assertEqual(stub.data_reference["butler_collections"], ["LSSTCam/runs/DP0.2"])
+                self.assertIn(adapter.extension_namespace, stub.extensions)
 
     def test_adapter_deduplicates_built_in_software_entries(self) -> None:
         adapter = StarredAdapter(version="2.1.0")

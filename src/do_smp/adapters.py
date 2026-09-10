@@ -106,6 +106,8 @@ class SMPAdapter(ABC):
     def _build_normalized_stub(self, request: SMPRunRequest) -> SMPRunStub:
         self.validate_request(request)
         metadata = request.to_metadata_dict()
+        extensions = copy.deepcopy(metadata["extensions"])
+        extensions.setdefault(self.extension_namespace, {})
         adapter_metadata = {
             "name": self.name,
             "version": self.version,
@@ -155,7 +157,7 @@ class SMPAdapter(ABC):
             provenance=metadata["provenance"],
             archival=metadata["archival"],
             requested_outputs=metadata["requested_outputs"],
-            extensions=metadata["extensions"],
+            extensions=extensions,
             status=request.status,
         )
 

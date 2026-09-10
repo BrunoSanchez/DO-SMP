@@ -108,7 +108,7 @@ class SlurmRunner(SMPRunner):
             command=[
                 "bash",
                 "-lc",
-                "cat <<'EOF' | sbatch\n" + script + "EOF",
+                "cat <<'EOF' | sbatch\n" + script + "\nEOF",
             ],
             metadata={
                 "run_id": stub.run_id,
