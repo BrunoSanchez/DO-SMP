@@ -1,0 +1,32 @@
+schema_version: "0.1.0"
+run_id: "<generated-run-id>"
+created_at: "<generated-utc-timestamp>"
+updated_at: "<generated-utc-timestamp>"
+user_id: "<user-id>"
+status: draft
+notes:
+  - describe the purpose of this SMP run
+configuration:
+  config_uri: configs/run.yaml
+software:
+  -
+    name: generic-smp
+    version: "0.1.0"
+    role: smp-engine
+input_data:
+  dataset_uri: inputs/
+targets:
+  -
+    name: SNXXXXXX
+auxiliary: {}
+environment:
+  python: "3.12"
+engine:
+  name: generic-smp
+  version: "0.1.0"
+outputs:
+  light_curves: []
+  model_fits: []
+  summary_tables: []
+  diagnostics: []
+  artifacts: []
