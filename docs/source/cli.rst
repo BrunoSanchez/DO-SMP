@@ -28,7 +28,7 @@ Add notes and an explicit status
 
    PYTHONPATH=src python -m do_smp stub \
      --user-id analyst-42 \
-     --engine scene-modeler \
+     --engine scene-modeling-photometry \
      --engine-version 2.1.0 \
      --status queued \
      --note "DESC reprocessing batch 12" \

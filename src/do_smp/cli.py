@@ -18,7 +18,7 @@ from .standards import (
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="DO-SMP command line interface.")
-    subparsers = parser.add_subparsers(dest="command", required=True)
+    subparsers = parser.add_subparsers(dest="command")
 
     stub_parser = subparsers.add_parser("stub", help="Emit a reproducible SMP run stub")
     stub_parser.add_argument(
@@ -92,6 +92,8 @@ def main(argv: list[str] | None = None) -> int:
 
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.command is None:
+        parser.error("a subcommand is required")
 
     if args.command == "run":
         run_stub_path = Path(args.run_stub)
@@ -117,11 +119,7 @@ def main(argv: list[str] | None = None) -> int:
         butler_collections=args.collection,
         templates=args.template,
         external_catalogs=args.external_catalog,
-        extras=(
-            {"dataset_uri": args.dataset_uri}
-            if args.dataset_uri
-            else {}
-        ),
+        dataset_uri=args.dataset_uri,
     )
     request = SMPRunRequest(
         user_id=args.user_id,

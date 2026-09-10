@@ -208,6 +208,14 @@ class SMPRunStubTest(unittest.TestCase):
 
         self.assertEqual(sorted(stub.outputs), ["diagnostics", "light_curves"])
 
+    def test_create_stub_can_explicitly_request_no_output_categories(self) -> None:
+        stub = SMPRunStub.create(
+            user_id="desc-user",
+            requested_outputs=[],
+        )
+
+        self.assertEqual(stub.outputs, {})
+
     def test_create_stub_rejects_unknown_requested_output_categories(self) -> None:
         with self.assertRaises(ValueError):
             SMPRunStub.create(
@@ -357,6 +365,20 @@ class SMPRunStubTest(unittest.TestCase):
         self.assertIn("- second", output)
         self.assertIn("registry_uri: \"s3://registry/smp\"", output)
 
+    def test_cli_preserves_dataset_uri_in_data_reference(self) -> None:
+        with patch("sys.stdout", new_callable=io.StringIO) as stdout:
+            exit_code = cli.main(
+                [
+                    "--user-id",
+                    "desc-user",
+                    "--dataset-uri",
+                    "s3://bucket/dataset",
+                ]
+            )
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn('dataset_uri: "s3://bucket/dataset"', stdout.getvalue())
+
     def test_cli_lists_builtin_engines(self) -> None:
         with patch("sys.stdout", new_callable=io.StringIO) as stdout:
             exit_code = cli.main(["--list-engines"])
@@ -406,12 +428,13 @@ class SMPRunStubTest(unittest.TestCase):
         script = launch.metadata["job_script"]
 
         self.assertEqual(launch.backend, "slurm-perlmutter")
-        self.assertEqual(launch.command, ["sbatch"])
+        self.assertEqual(launch.command[:2], ["bash", "-lc"])
         self.assertIn("#SBATCH --account=desc", script)
         self.assertIn("#SBATCH --qos=debug", script)
         self.assertIn("#SBATCH --constraint=cpu", script)
         self.assertIn("NERSC Perlmutter", launch.metadata["site"])
         self.assertIn("srun python -m do_smp run --run-stub '/abs/run stub.yaml'", script)
+        self.assertIn("cat <<'EOF' | sbatch", launch.command[2])
 
 
 if __name__ == "__main__":

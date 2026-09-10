@@ -85,6 +85,7 @@ class RubinInputBundle:
     templates: list[str] = field(default_factory=list)
     references: list[str] = field(default_factory=list)
     external_catalogs: list[str] = field(default_factory=list)
+    dataset_uri: str | None = None
     manifest_uri: str | None = None
     extras: dict[str, Any] = field(default_factory=dict)
 
@@ -100,6 +101,8 @@ class RubinInputBundle:
             "references": copy.deepcopy(self.references),
             "external_catalogs": copy.deepcopy(self.external_catalogs),
         }
+        if self.dataset_uri is not None:
+            payload["dataset_uri"] = self.dataset_uri
         if self.manifest_uri is not None:
             payload["manifest_uri"] = self.manifest_uri
         payload.update(copy.deepcopy(self.extras))
@@ -113,6 +116,8 @@ class RubinInputBundle:
             "templates": copy.deepcopy(self.templates),
             "external_catalogs": copy.deepcopy(self.external_catalogs),
         }
+        if self.dataset_uri is not None:
+            payload["dataset_uri"] = self.dataset_uri
         if self.manifest_uri is not None:
             payload["manifest_uri"] = self.manifest_uri
         return payload
@@ -201,9 +206,7 @@ class SMPRunRequest:
     code_reference: dict[str, Any] = field(default_factory=dict)
     provenance: dict[str, Any] = field(default_factory=dict)
     archival: ArtifactRegistry | Mapping[str, Any] | None = None
-    requested_outputs: list[str] = field(
-        default_factory=lambda: list(DEFAULT_OUTPUT_CATEGORIES)
-    )
+    requested_outputs: list[str] | None = None
     extensions: dict[str, Any] = field(default_factory=dict)
     status: str = "draft"
 
@@ -255,7 +258,11 @@ class SMPRunRequest:
         return _normalize_mapping(self.archival)
 
     def normalized_requested_outputs(self) -> list[str]:
-        requested = self.requested_outputs or list(DEFAULT_OUTPUT_CATEGORIES)
+        requested = (
+            list(DEFAULT_OUTPUT_CATEGORIES)
+            if self.requested_outputs is None
+            else list(self.requested_outputs)
+        )
         unknown = sorted({category for category in requested if category not in DEFAULT_OUTPUT_CATEGORIES})
         if unknown:
             raise ValueError(f"Unsupported output categories: {', '.join(unknown)}")

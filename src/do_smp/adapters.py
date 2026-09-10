@@ -62,7 +62,11 @@ class SMPAdapter(ABC):
                 code_reference=dict(code_reference or {}),
                 provenance=dict(provenance or {}),
                 archival=dict(archival or {}),
-                requested_outputs=list(requested_outputs or DEFAULT_OUTPUT_CATEGORIES),
+                requested_outputs=(
+                    list(DEFAULT_OUTPUT_CATEGORIES)
+                    if requested_outputs is None
+                    else list(requested_outputs)
+                ),
                 extensions=dict(extensions or {}),
                 status=status,
             )

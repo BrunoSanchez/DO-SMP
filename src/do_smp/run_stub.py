@@ -209,7 +209,11 @@ class SMPRunStub:
         if status not in RUN_STATUSES:
             raise ValueError(f"Unsupported status: {status}")
 
-        normalized_requested_outputs = list(requested_outputs or DEFAULT_OUTPUT_CATEGORIES)
+        normalized_requested_outputs = (
+            list(DEFAULT_OUTPUT_CATEGORIES)
+            if requested_outputs is None
+            else list(requested_outputs)
+        )
         invalid_requested_outputs = sorted(
             {category for category in normalized_requested_outputs if category not in DEFAULT_OUTPUT_CATEGORIES}
         )

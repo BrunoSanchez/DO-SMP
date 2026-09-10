@@ -102,12 +102,17 @@ class SlurmRunner(SMPRunner):
         return "\n".join(lines)
 
     def prepare_launch(self, stub: SMPRunStub, *, run_stub_path: str) -> RunnerLaunch:
+        script = self.render_job_script(stub, run_stub_path=run_stub_path)
         return RunnerLaunch(
             backend=self.backend_name,
-            command=["sbatch"],
+            command=[
+                "bash",
+                "-lc",
+                "cat <<'EOF' | sbatch\n" + script + "EOF",
+            ],
             metadata={
                 "run_id": stub.run_id,
-                "job_script": self.render_job_script(stub, run_stub_path=run_stub_path),
+                "job_script": script,
                 "engine": stub.engine.get("name"),
                 "site": "NERSC Perlmutter",
             },
