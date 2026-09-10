@@ -405,6 +405,10 @@ class SMPRunStubTest(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertIn(str(stub_path), stdout.getvalue())
 
+    def test_cli_run_subcommand_rejects_missing_stub(self) -> None:
+        with self.assertRaises(SystemExit):
+            cli.main(["run", "--run-stub", "/tmp/does-not-exist.yaml"])
+
     def test_local_runner_prepares_command(self) -> None:
         stub = SMPRunStub.create(
             user_id="desc-user",

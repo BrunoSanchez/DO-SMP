@@ -48,6 +48,18 @@ def _normalize_sequence(values: list[Any]) -> list[Any]:
     return normalized
 
 
+def normalize_requested_outputs(requested_outputs: list[str] | None) -> list[str]:
+    requested = (
+        list(DEFAULT_OUTPUT_CATEGORIES)
+        if requested_outputs is None
+        else list(requested_outputs)
+    )
+    unknown = sorted({category for category in requested if category not in DEFAULT_OUTPUT_CATEGORIES})
+    if unknown:
+        raise ValueError(f"Unsupported output categories: {', '.join(unknown)}")
+    return list(dict.fromkeys(requested))
+
+
 @dataclass
 class RubinDataCoordinate:
     """Canonical Rubin/LSST data identifier."""
@@ -231,6 +243,11 @@ class SMPRunRequest:
             "templates": copy.deepcopy(payload.get("templates", [])),
             "external_catalogs": copy.deepcopy(payload.get("external_catalogs", [])),
             **(
+                {"dataset_uri": payload["dataset_uri"]}
+                if payload.get("dataset_uri") is not None
+                else {}
+            ),
+            **(
                 {"manifest_uri": payload["manifest_uri"]}
                 if payload.get("manifest_uri") is not None
                 else {}
@@ -258,15 +275,7 @@ class SMPRunRequest:
         return _normalize_mapping(self.archival)
 
     def normalized_requested_outputs(self) -> list[str]:
-        requested = (
-            list(DEFAULT_OUTPUT_CATEGORIES)
-            if self.requested_outputs is None
-            else list(self.requested_outputs)
-        )
-        unknown = sorted({category for category in requested if category not in DEFAULT_OUTPUT_CATEGORIES})
-        if unknown:
-            raise ValueError(f"Unsupported output categories: {', '.join(unknown)}")
-        return list(dict.fromkeys(requested))
+        return normalize_requested_outputs(self.requested_outputs)
 
     def to_metadata_dict(self) -> dict[str, Any]:
         return {

@@ -11,7 +11,12 @@ import math
 import re
 from typing import Any, Mapping
 
-from .standards import DEFAULT_OUTPUT_CATEGORIES, DEFAULT_PIPELINE_TYPE, RUN_STATUSES
+from .standards import (
+    DEFAULT_OUTPUT_CATEGORIES,
+    DEFAULT_PIPELINE_TYPE,
+    RUN_STATUSES,
+    normalize_requested_outputs,
+)
 
 YAML_AMBIGUOUS_STRINGS = {
     "",
@@ -209,19 +214,7 @@ class SMPRunStub:
         if status not in RUN_STATUSES:
             raise ValueError(f"Unsupported status: {status}")
 
-        normalized_requested_outputs = (
-            list(DEFAULT_OUTPUT_CATEGORIES)
-            if requested_outputs is None
-            else list(requested_outputs)
-        )
-        invalid_requested_outputs = sorted(
-            {category for category in normalized_requested_outputs if category not in DEFAULT_OUTPUT_CATEGORIES}
-        )
-        if invalid_requested_outputs:
-            raise ValueError(
-                f"Unsupported output categories: {', '.join(invalid_requested_outputs)}"
-            )
-        normalized_requested_outputs = list(dict.fromkeys(normalized_requested_outputs))
+        normalized_requested_outputs = normalize_requested_outputs(requested_outputs)
         created_at = _utc_now()
         payload = {
             "schema_version": "0.1.0",
