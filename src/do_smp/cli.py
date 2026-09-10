@@ -81,6 +81,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     run_parser = subparsers.add_parser("run", help="Prepare execution metadata from a run stub")
     run_parser.add_argument("--run-stub", required=True, help="Path to the run stub YAML file")
+    parser.do_smp_stub_parser = stub_parser  # type: ignore[attr-defined]
     return parser
 
 
@@ -104,13 +105,14 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.write("\n".join(registry.names()) + "\n")
         return 0
 
+    stub_parser = parser.do_smp_stub_parser  # type: ignore[attr-defined]
     if not args.user_id:
-        parser.error("--user-id is required unless --list-engines is used")
+        stub_parser.error("--user-id is required unless --list-engines is used")
 
     try:
         adapter = registry.create(args.engine, version=args.engine_version)
     except KeyError:
-        parser.error(f"unknown engine: {args.engine}")
+        stub_parser.error(f"unknown engine: {args.engine}")
     input_bundle = RubinInputBundle(
         butler_collections=args.collection,
         templates=args.template,

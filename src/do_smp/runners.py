@@ -88,6 +88,7 @@ class SlurmRunner(SMPRunner):
             "set -euo pipefail",
             f"export DO_SMP_RUN_ID={shlex.quote(stub.run_id)}",
             f"export DO_SMP_ENGINE={shlex.quote(str(stub.engine.get('name', 'unknown')))}",
+            "export PYTHONPATH=src${PYTHONPATH:+:$PYTHONPATH}",
             f"srun python -m do_smp run --run-stub {shlex.quote(run_stub_path)}",
             "",
         ]

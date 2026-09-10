@@ -33,7 +33,7 @@ Modeling Photometry (SMP) runs:
 
 ```bash
 cd <repo-root>
-PYTHONPATH=src python -m do_smp --user-id your-user-id --engine generic-smp --engine-version 0.1.0
+PYTHONPATH=src python -m do_smp stub --user-id your-user-id --engine generic-smp --engine-version 0.1.0
 ```
 
 The command prints a YAML stub that can be versioned alongside SMP processing
@@ -42,13 +42,13 @@ runs to improve reproducibility and collaboration.
 List the built-in engines:
 
 ```bash
-PYTHONPATH=src python -m do_smp --list-engines
+PYTHONPATH=src python -m do_smp stub --list-engines
 ```
 
 Generate a STARRED-flavored stub with Rubin and archival metadata:
 
 ```bash
-PYTHONPATH=src python -m do_smp \
+PYTHONPATH=src python -m do_smp stub \
   --user-id your-user-id \
   --created-by "jdoe (DESC)" \
   --engine starred \

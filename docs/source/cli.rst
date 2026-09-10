@@ -8,7 +8,7 @@ Minimal example
 
 .. code-block:: bash
 
-   PYTHONPATH=src python -m do_smp \
+   PYTHONPATH=src python -m do_smp stub \
      --user-id your-user-id \
      --engine generic-smp \
      --engine-version 0.1.0
@@ -18,7 +18,7 @@ List the built-in engines
 
 .. code-block:: bash
 
-   PYTHONPATH=src python -m do_smp \
+   PYTHONPATH=src python -m do_smp stub \
      --list-engines
 
 Add notes and an explicit status
@@ -26,7 +26,7 @@ Add notes and an explicit status
 
 .. code-block:: bash
 
-   PYTHONPATH=src python -m do_smp \
+   PYTHONPATH=src python -m do_smp stub \
      --user-id analyst-42 \
      --engine scene-modeler \
      --engine-version 2.1.0 \
@@ -39,7 +39,7 @@ Rubin-aware STARRED example
 
 .. code-block:: bash
 
-   PYTHONPATH=src python -m do_smp \
+   PYTHONPATH=src python -m do_smp stub \
      --user-id analyst-42 \
      --created-by "jdoe (DESC)" \
      --engine starred \
@@ -54,7 +54,7 @@ Write a stub to a file
 
 .. code-block:: bash
 
-   PYTHONPATH=src python -m do_smp \
+   PYTHONPATH=src python -m do_smp stub \
      --user-id analyst-42 \
      --engine generic-smp \
      --engine-version 0.1.0 \
