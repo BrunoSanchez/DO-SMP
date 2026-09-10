@@ -216,6 +216,15 @@ class SMPRunStubTest(unittest.TestCase):
         self.assertIsInstance(registry.get("astrophot"), AstroPhotAdapter)
         self.assertIn("supported_backends", registry.capabilities()["starred"])
 
+    def test_adapter_registry_create_preserves_generic_adapter_name(self) -> None:
+        registry = AdapterRegistry()
+        registry.register(GenericSMPAdapter(name="adapter-a", version="1.0.0"))
+
+        adapter = registry.create("adapter-a", version="9.9.9")
+
+        self.assertEqual(adapter.name, "adapter-a")
+        self.assertEqual(adapter.version, "9.9.9")
+
     def test_builtin_adapters_emit_engine_specific_metadata(self) -> None:
         adapters = [
             StarredAdapter(version="1.0.0"),

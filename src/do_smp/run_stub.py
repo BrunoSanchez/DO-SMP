@@ -269,16 +269,7 @@ class SMPRunStub:
             provenance=copy.deepcopy(provenance or {}),
             archival=copy.deepcopy(archival or {}),
             extensions=copy.deepcopy(extensions or {}),
-            outputs={
-                category: []
-                for category in DEFAULT_OUTPUT_CATEGORIES
-                if category in requested_output_set
-            }
-            | {
-                category: []
-                for category in DEFAULT_OUTPUT_CATEGORIES
-                if category not in requested_output_set
-            },
+            outputs={category: [] for category in DEFAULT_OUTPUT_CATEGORIES},
         )
 
     def add_output(self, category: str, **metadata: Any) -> None:

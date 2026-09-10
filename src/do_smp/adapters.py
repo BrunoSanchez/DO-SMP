@@ -80,6 +80,13 @@ class SMPAdapter(ABC):
             "extension_namespace": self.extension_namespace,
         }
 
+    def clone(self, *, version: str | None = None) -> "SMPAdapter":
+        cloned = copy.deepcopy(self)
+        if version is not None:
+            cloned.version = version
+            cloned.engine_version = version
+        return cloned
+
     def validate_request(self, request: SMPRunRequest) -> None:
         unknown_namespaces = [
             namespace
@@ -213,7 +220,7 @@ class AdapterRegistry:
 
     def create(self, name: str, *, version: str = "unknown") -> SMPAdapter:
         prototype = self.get(name)
-        return type(prototype)(version=version)
+        return prototype.clone(version=version)
 
     @classmethod
     def with_builtin_adapters(cls) -> "AdapterRegistry":
