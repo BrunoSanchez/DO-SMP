@@ -103,6 +103,19 @@ def _normalize_for_export(value: Any) -> Any:
     return value
 
 
+def _normalize_for_hash(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {key: _normalize_for_hash(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_normalize_for_hash(item) for item in value]
+    if isinstance(value, float):
+        if math.isnan(value):
+            return "nan"
+        if math.isinf(value):
+            return "inf" if value > 0 else "-inf"
+    return value
+
+
 def _to_yaml_lines(value: Any, indent: int = 0) -> list[str]:
     prefix = " " * indent
 
@@ -196,7 +209,7 @@ class SMPRunStub:
         }
         run_id = hashlib.sha256(
             json.dumps(
-                _canonicalize_for_hash(_normalize_for_export(payload)),
+                _canonicalize_for_hash(_normalize_for_hash(payload)),
                 sort_keys=True,
                 separators=(",", ":"),
                 allow_nan=False,
@@ -229,24 +242,24 @@ class SMPRunStub:
     def to_dict(self) -> dict[str, Any]:
         return copy.deepcopy(
             {
-            "schema_version": self.schema_version,
-            "run_id": self.run_id,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
-            "user_id": self.user_id,
-            "status": self.status,
-            "notes": self.notes,
-            "configuration": self.configuration,
-            "software": self.software,
-            "input_data": self.input_data,
-            "targets": self.targets,
-            "auxiliary": self.auxiliary,
-            "environment": self.environment,
-            "engine": self.engine,
-            "outputs": {
-                category: items for category, items in self.outputs.items()
+                "schema_version": self.schema_version,
+                "run_id": self.run_id,
+                "created_at": self.created_at,
+                "updated_at": self.updated_at,
+                "user_id": self.user_id,
+                "status": self.status,
+                "notes": self.notes,
+                "configuration": self.configuration,
+                "software": self.software,
+                "input_data": self.input_data,
+                "targets": self.targets,
+                "auxiliary": self.auxiliary,
+                "environment": self.environment,
+                "engine": self.engine,
+                "outputs": {
+                    category: items for category, items in self.outputs.items()
+                },
             },
-        }
         )
 
     def to_yaml(self) -> str:

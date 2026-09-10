@@ -161,6 +161,15 @@ class SMPRunStubTest(unittest.TestCase):
 
         self.assertEqual(stub.configuration["nested"]["bands"], ["g", "r"])
 
+    def test_add_output_rejects_unknown_category(self) -> None:
+        stub = SMPRunStub.create(user_id="desc-user")
+        before = stub.to_dict()["outputs"]
+
+        with self.assertRaises(ValueError):
+            stub.add_output("unknown_category", path="outputs/file.txt")
+
+        self.assertEqual(stub.to_dict()["outputs"], before)
+
     def test_cli_main_emits_notes_and_engine_metadata(self) -> None:
         with patch("sys.stdout", new_callable=io.StringIO) as stdout:
             exit_code = cli.main(
