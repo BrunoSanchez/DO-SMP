@@ -13,7 +13,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--user-id", required=True, help="Collaborator or service user id")
     parser.add_argument("--engine", default="generic-smp", help="SMP engine name")
     parser.add_argument("--engine-version", default="unknown", help="SMP engine version")
-    parser.add_argument("--status", default="draft", help="Initial run status")
+    parser.add_argument(
+        "--status",
+        default="draft",
+        choices=("draft", "queued", "running", "completed", "failed", "cancelled"),
+        help="Initial run status",
+    )
     parser.add_argument(
         "--note",
         action="append",

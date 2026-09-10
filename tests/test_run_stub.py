@@ -103,7 +103,12 @@ class SMPRunStubTest(unittest.TestCase):
     def test_yaml_quotes_special_keys_and_nested_values(self) -> None:
         stub = SMPRunStub.create(
             user_id="desc-user",
-            configuration={"config:uri": "configs/run:1.yaml", " key ": " value "},
+            configuration={
+                "config:uri": "configs/run:1.yaml",
+                " key ": " value ",
+                "bool_string": "true",
+                "null_string": "null",
+            },
             input_data={"inputs": [{"uri": "s3://bucket/file.fits", "tag": "raw:data"}]},
         )
 
@@ -111,6 +116,8 @@ class SMPRunStubTest(unittest.TestCase):
 
         self.assertIn('"config:uri": "configs/run:1.yaml"', yaml_output)
         self.assertIn('" key ": " value "', yaml_output)
+        self.assertIn('bool_string: "true"', yaml_output)
+        self.assertIn('null_string: "null"', yaml_output)
         self.assertIn("inputs:\n    -\n      uri: \"s3://bucket/file.fits\"", yaml_output)
         self.assertIn('tag: "raw:data"', yaml_output)
 
@@ -170,6 +177,10 @@ class SMPRunStubTest(unittest.TestCase):
         self.assertIn("version: 2.1.0", output)
         self.assertIn("- first", output)
         self.assertIn("- second", output)
+
+    def test_cli_rejects_unknown_status(self) -> None:
+        with self.assertRaises(SystemExit):
+            cli.main(["--user-id", "desc-user", "--status", "unknown-status"])
 
 
 if __name__ == "__main__":

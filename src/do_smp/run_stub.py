@@ -19,6 +19,21 @@ DEFAULT_OUTPUT_CATEGORIES = (
     "artifacts",
 )
 
+YAML_AMBIGUOUS_STRINGS = {
+    "",
+    "null",
+    "~",
+    "true",
+    "false",
+    "yes",
+    "no",
+    "on",
+    "off",
+    ".nan",
+    ".inf",
+    "-.inf",
+}
+
 
 def _utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -42,7 +57,7 @@ def _normalize_scalar(value: Any) -> str:
         or text.strip() != text
         or "\n" in text
         or any(character in text for character in ":#{}[]&*!|>'\"%@`")
-        or text.lower() in {"null", "true", "false", "yes", "no"}
+        or text.lower() in YAML_AMBIGUOUS_STRINGS
     ):
         return json.dumps(text)
     return text
@@ -56,6 +71,8 @@ def _canonicalize_for_hash(value: Any) -> Any:
         }
     if isinstance(value, list):
         return [_canonicalize_for_hash(item) for item in value]
+    if isinstance(value, float) and not math.isfinite(value):
+        return str(value)
     return value
 
 
