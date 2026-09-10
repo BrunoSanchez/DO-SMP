@@ -1,21 +1,26 @@
 schema_version: "0.1.0"
-run_id: b54d56e617d052cec538c01c2b6b4c0349f1a185f505ed5f7f031e310ebca176
-created_at: "2026-09-10T14:36:42Z"
-updated_at: "2026-09-10T14:36:42Z"
-user_id: desc-user
+run_id: "<generated-run-id>"
+created_at: "<generated-utc-timestamp>"
+updated_at: "<generated-utc-timestamp>"
+user_id: "<user-id>"
 status: draft
 notes:
-  - template for collaborative SMP runs
-configuration: {}
+  - describe the purpose of this SMP run
+configuration:
+  config_uri: configs/run.yaml
 software:
   -
     name: generic-smp
     version: "0.1.0"
     role: smp-engine
-input_data: {}
-targets: []
+input_data:
+  dataset_uri: inputs/
+targets:
+  -
+    name: SNXXXXXX
 auxiliary: {}
-environment: {}
+environment:
+  python: "3.12"
 engine:
   name: generic-smp
   version: "0.1.0"

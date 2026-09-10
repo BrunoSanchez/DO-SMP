@@ -12,7 +12,8 @@ Modeling Photometry (SMP) runs:
   shared interface
 - output tracking for light-curves, model fits, summary tables, diagnostics,
   and generic artifacts
-- a checked-in YAML example at `examples/smp-run.stub.yaml`
+- a checked-in YAML starter template with placeholders at
+  `examples/smp-run.stub.yaml`
 
 ## Layout
 

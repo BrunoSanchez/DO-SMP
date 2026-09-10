@@ -30,6 +30,9 @@ YAML_AMBIGUOUS_STRINGS = {
     "no",
     "on",
     "off",
+    "nan",
+    "inf",
+    "-inf",
     ".nan",
     ".inf",
     "-.inf",
@@ -49,7 +52,9 @@ def _normalize_scalar(value: Any) -> str:
     if isinstance(value, int):
         return str(value)
     if isinstance(value, float):
-        return json.dumps(repr(value))
+        if not math.isfinite(value):
+            return json.dumps(str(value))
+        return str(value)
 
     text = str(value)
     if (
@@ -72,8 +77,6 @@ def _canonicalize_for_hash(value: Any) -> Any:
         }
     if isinstance(value, list):
         return [_canonicalize_for_hash(item) for item in value]
-    if isinstance(value, float) and not math.isfinite(value):
-        return str(value)
     return value
 
 
@@ -88,6 +91,16 @@ def _sorted_canonical_list(values: list[Any]) -> list[Any]:
             )
         )
     return [canonical_item for _, canonical_item in sorted(decorated, key=lambda pair: pair[0])]
+
+
+def _normalize_for_export(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {key: _normalize_for_export(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_normalize_for_export(item) for item in value]
+    if isinstance(value, float) and not math.isfinite(value):
+        return str(value)
+    return value
 
 
 def _to_yaml_lines(value: Any, indent: int = 0) -> list[str]:
@@ -182,9 +195,12 @@ class SMPRunStub:
             "engine": engine or {},
         }
         run_id = hashlib.sha256(
-            json.dumps(_canonicalize_for_hash(payload), sort_keys=True, separators=(",", ":")).encode(
-                "utf-8"
-            )
+            json.dumps(
+                _canonicalize_for_hash(_normalize_for_export(payload)),
+                sort_keys=True,
+                separators=(",", ":"),
+                allow_nan=False,
+            ).encode("utf-8")
         ).hexdigest()
 
         return cls(
@@ -234,4 +250,4 @@ class SMPRunStub:
         )
 
     def to_yaml(self) -> str:
-        return "\n".join(_to_yaml_lines(self.to_dict())) + "\n"
+        return "\n".join(_to_yaml_lines(_normalize_for_export(self.to_dict()))) + "\n"

@@ -131,6 +131,17 @@ class SMPRunStubTest(unittest.TestCase):
 
         self.assertIn('nan_value: "nan"', yaml_output)
         self.assertIn('inf_value: "inf"', yaml_output)
+        self.assertTrue(stub.run_id)
+
+    def test_yaml_keeps_finite_floats_numeric(self) -> None:
+        stub = SMPRunStub.create(
+            user_id="desc-user",
+            auxiliary={"seeing": 1.5},
+        )
+
+        yaml_output = stub.to_yaml()
+
+        self.assertIn("seeing: 1.5", yaml_output)
 
     def test_adapter_registry_returns_registered_adapter(self) -> None:
         adapter = GenericSMPAdapter(name="adapter-a", version="1.0.0")
