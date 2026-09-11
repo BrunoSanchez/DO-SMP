@@ -11,13 +11,11 @@ import math
 import re
 from typing import Any, Mapping
 
-
-DEFAULT_OUTPUT_CATEGORIES = (
-    "light_curves",
-    "model_fits",
-    "summary_tables",
-    "diagnostics",
-    "artifacts",
+from .standards import (
+    DEFAULT_OUTPUT_CATEGORIES,
+    DEFAULT_PIPELINE_TYPE,
+    RUN_STATUSES,
+    normalize_requested_outputs,
 )
 
 YAML_AMBIGUOUS_STRINGS = {
@@ -166,6 +164,8 @@ class SMPRunStub:
     created_at: str
     updated_at: str
     user_id: str
+    created_by: str
+    pipeline_type: str
     status: str
     notes: list[str] = field(default_factory=list)
     configuration: dict[str, Any] = field(default_factory=dict)
@@ -174,7 +174,14 @@ class SMPRunStub:
     targets: list[dict[str, Any]] = field(default_factory=list)
     auxiliary: dict[str, Any] = field(default_factory=dict)
     environment: dict[str, Any] = field(default_factory=dict)
+    adapter: dict[str, Any] = field(default_factory=dict)
     engine: dict[str, Any] = field(default_factory=dict)
+    code_reference: dict[str, Any] = field(default_factory=dict)
+    data_reference: dict[str, Any] = field(default_factory=dict)
+    target_summary: dict[str, Any] = field(default_factory=dict)
+    provenance: dict[str, Any] = field(default_factory=dict)
+    archival: dict[str, Any] = field(default_factory=dict)
+    extensions: dict[str, Any] = field(default_factory=dict)
     outputs: dict[str, list[dict[str, Any]]] = field(
         default_factory=lambda: {category: [] for category in DEFAULT_OUTPUT_CATEGORIES}
     )
@@ -184,6 +191,8 @@ class SMPRunStub:
         cls,
         *,
         user_id: str,
+        created_by: str | None = None,
+        pipeline_type: str = DEFAULT_PIPELINE_TYPE,
         configuration: dict[str, Any] | None = None,
         software: list[dict[str, Any]] | None = None,
         input_data: dict[str, Any] | None = None,
@@ -191,13 +200,27 @@ class SMPRunStub:
         auxiliary: dict[str, Any] | None = None,
         notes: list[str] | None = None,
         environment: dict[str, Any] | None = None,
+        adapter: dict[str, Any] | None = None,
         engine: dict[str, Any] | None = None,
+        code_reference: dict[str, Any] | None = None,
+        data_reference: dict[str, Any] | None = None,
+        target_summary: dict[str, Any] | None = None,
+        provenance: dict[str, Any] | None = None,
+        archival: dict[str, Any] | None = None,
+        requested_outputs: list[str] | None = None,
+        extensions: dict[str, Any] | None = None,
         status: str = "draft",
     ) -> "SMPRunStub":
+        if status not in RUN_STATUSES:
+            raise ValueError(f"Unsupported status: {status}")
+
+        normalized_requested_outputs = normalize_requested_outputs(requested_outputs)
         created_at = _utc_now()
         payload = {
             "schema_version": "0.1.0",
             "user_id": user_id,
+            "created_by": created_by or user_id,
+            "pipeline_type": pipeline_type,
             "notes": notes or [],
             "configuration": configuration or {},
             "software": _sorted_canonical_list(software or []),
@@ -205,7 +228,15 @@ class SMPRunStub:
             "targets": _sorted_canonical_list(targets or []),
             "auxiliary": auxiliary or {},
             "environment": environment or {},
+            "adapter": adapter or {},
             "engine": engine or {},
+            "code_reference": code_reference or {},
+            "data_reference": data_reference or {},
+            "target_summary": target_summary or {},
+            "provenance": provenance or {},
+            "archival": archival or {},
+            "requested_outputs": normalized_requested_outputs,
+            "extensions": extensions or {},
         }
         run_id = hashlib.sha256(
             json.dumps(
@@ -222,6 +253,8 @@ class SMPRunStub:
             created_at=created_at,
             updated_at=created_at,
             user_id=user_id,
+            created_by=created_by or user_id,
+            pipeline_type=pipeline_type,
             status=status,
             notes=copy.deepcopy(notes or []),
             configuration=copy.deepcopy(configuration or {}),
@@ -230,13 +263,27 @@ class SMPRunStub:
             targets=copy.deepcopy(targets or []),
             auxiliary=copy.deepcopy(auxiliary or {}),
             environment=copy.deepcopy(environment or {}),
+            adapter=copy.deepcopy(adapter or {}),
             engine=copy.deepcopy(engine or {}),
+            code_reference=copy.deepcopy(code_reference or {}),
+            data_reference=copy.deepcopy(data_reference or {}),
+            target_summary=copy.deepcopy(target_summary or {}),
+            provenance=copy.deepcopy(provenance or {}),
+            archival=copy.deepcopy(archival or {}),
+            extensions=copy.deepcopy(extensions or {}),
+            outputs={category: [] for category in normalized_requested_outputs},
         )
 
     def add_output(self, category: str, **metadata: Any) -> None:
         if category not in self.outputs:
             raise ValueError(f"Unsupported output category: {category}")
         self.outputs[category].append(dict(metadata))
+        self.updated_at = _utc_now()
+
+    def set_status(self, status: str) -> None:
+        if status not in RUN_STATUSES:
+            raise ValueError(f"Unsupported status: {status}")
+        self.status = status
         self.updated_at = _utc_now()
 
     def to_dict(self) -> dict[str, Any]:
@@ -247,6 +294,8 @@ class SMPRunStub:
                 "created_at": self.created_at,
                 "updated_at": self.updated_at,
                 "user_id": self.user_id,
+                "created_by": self.created_by,
+                "pipeline_type": self.pipeline_type,
                 "status": self.status,
                 "notes": self.notes,
                 "configuration": self.configuration,
@@ -255,7 +304,14 @@ class SMPRunStub:
                 "targets": self.targets,
                 "auxiliary": self.auxiliary,
                 "environment": self.environment,
+                "adapter": self.adapter,
                 "engine": self.engine,
+                "code_reference": self.code_reference,
+                "data_reference": self.data_reference,
+                "target_summary": self.target_summary,
+                "provenance": self.provenance,
+                "archival": self.archival,
+                "extensions": self.extensions,
                 "outputs": {
                     category: items for category, items in self.outputs.items()
                 },

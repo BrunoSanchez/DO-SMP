@@ -2,21 +2,21 @@ schema_version: "0.1.0"
 run_id: "<generated-run-id>"
 created_at: "<generated-utc-timestamp>"
 updated_at: "<generated-utc-timestamp>"
-user_id: "<user-id>"
-created_by: "<user-id or display name>"
+user_id: desc-user
+created_by: "jdoe (DESC)"
 pipeline_type: "Scene Modeling Photometry (SMP)"
-status: draft
+status: queued
 notes:
-  - describe the purpose of this SMP run
+  - STARRED commissioning run for DESC SN Ia sample
 configuration:
-  config_uri: configs/run.yaml
+  config_uri: configs/starred.yaml
 software:
   -
-    name: generic-smp
+    name: starred
     version: "0.1.0"
     role: adapter
   -
-    name: generic-smp
+    name: STARRED
     version: "0.1.0"
     role: smp-engine
 input_data:
@@ -24,64 +24,38 @@ input_data:
     - LSSTCam/runs/DP0.2
   dataset_types:
     - calexp
-    - deepCoadd
   data_ids:
     -
       instrument: LSSTCam
       visit: 123456
       detector: 42
       band: i
-  exposures:
-    - 123456
-  visits:
-    - 123456
-  calibrations:
-    - bias-v1
   templates:
     - refs/template_i.fits
-  references:
-    - manifests/inputs.json
   external_catalogs:
     - catalogs/gaia.parquet
-  manifest_uri: manifests/inputs.json
 targets:
   -
-    object_id: SNXXXXXX
-    name: SNXXXXXX
+    object_id: SN2026abc
+    name: SN2026abc
     target_class: SN Ia
-    ra: 12.345
-    dec: -3.21
     redshift: 0.12
-auxiliary: {}
+auxiliary:
+  sample: desc-sn-ia
 environment:
   python: "3.12"
   lsst_stack: "w_2026_12"
 adapter:
-  name: generic-smp
+  name: starred
   version: "0.1.0"
 engine:
-  name: generic-smp
+  name: STARRED
   version: "0.1.0"
 code_reference:
-  repository: git@github.com:desc/do-smp.git
-  commit: abc1234
-  tag: v0.1.0
+  repository: https://gitlab.com/cosmograil/starred
 data_reference:
   butler_collections:
     - LSSTCam/runs/DP0.2
-  data_ids:
-    -
-      instrument: LSSTCam
-      visit: 123456
-      detector: 42
-      band: i
-  calibrations:
-    - bias-v1
-  templates:
-    - refs/template_i.fits
-  external_catalogs:
-    - catalogs/gaia.parquet
-  manifest_uri: manifests/inputs.json
 target_summary:
   count: 1
   classes:
@@ -92,13 +66,11 @@ target_summary:
 provenance:
   immutable: true
   rerun_capability: one-command
-  config_snapshot_uri: configs/run.yaml
 archival:
-  run_stub_uri: records/smp-run.stub.yaml
-  registry_uri: registry/index.json
-  archive_uri: archive/
-  citation_doi: 10.0000/example-doi
-extensions: {}
+  registry_uri: registry/starred.json
+  archive_uri: archive/starred/
+extensions:
+  engine.starred: {}
 outputs:
   light_curves: []
   model_fits: []
