@@ -1,0 +1,60 @@
+schema_version: "0.1.0"
+run_id: "<generated-run-id>"
+created_at: "<generated-utc-timestamp>"
+updated_at: "<generated-utc-timestamp>"
+user_id: desc-user
+created_by: "jdoe (DESC)"
+pipeline_type: "Scene Modeling Photometry (SMP)"
+status: queued
+notes:
+  - Scarlet2 blended-scene test
+configuration:
+  config_uri: configs/scarlet2.yaml
+software:
+  -
+    name: scarlet2
+    version: "0.1.0"
+    role: adapter
+  -
+    name: Scarlet2
+    version: "0.1.0"
+    role: smp-engine
+input_data:
+  butler_collections:
+    - LSSTCam/runs/DP0.2
+  dataset_types:
+    - calexp
+targets:
+  -
+    object_id: SN2026abc
+    target_class: SN Ia
+auxiliary: {}
+environment:
+  python: "3.12"
+adapter:
+  name: scarlet2
+  version: "0.1.0"
+engine:
+  name: Scarlet2
+  version: "0.1.0"
+code_reference:
+  repository: https://github.com/pmelchior/scarlet2
+data_reference:
+  butler_collections:
+    - LSSTCam/runs/DP0.2
+target_summary:
+  count: 1
+  classes:
+    - SN Ia
+provenance:
+  immutable: true
+archival:
+  registry_uri: registry/scarlet2.json
+extensions:
+  engine.scarlet2: {}
+outputs:
+  light_curves: []
+  model_fits: []
+  summary_tables: []
+  diagnostics: []
+  artifacts: []

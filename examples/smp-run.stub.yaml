@@ -3,6 +3,8 @@ run_id: "<generated-run-id>"
 created_at: "<generated-utc-timestamp>"
 updated_at: "<generated-utc-timestamp>"
 user_id: "<user-id>"
+created_by: "<user-id or display name>"
+pipeline_type: "Scene Modeling Photometry (SMP)"
 status: draft
 notes:
   - describe the purpose of this SMP run
@@ -12,18 +14,91 @@ software:
   -
     name: generic-smp
     version: "0.1.0"
+    role: adapter
+  -
+    name: generic-smp
+    version: "0.1.0"
     role: smp-engine
 input_data:
-  dataset_uri: inputs/
+  butler_collections:
+    - LSSTCam/runs/DP0.2
+  dataset_types:
+    - calexp
+    - deepCoadd
+  data_ids:
+    -
+      instrument: LSSTCam
+      visit: 123456
+      detector: 42
+      band: i
+  exposures:
+    - 123456
+  visits:
+    - 123456
+  calibrations:
+    - bias-v1
+  templates:
+    - refs/template_i.fits
+  references:
+    - manifests/inputs.json
+  external_catalogs:
+    - catalogs/gaia.parquet
+  manifest_uri: manifests/inputs.json
 targets:
   -
+    object_id: SNXXXXXX
     name: SNXXXXXX
+    target_class: SN Ia
+    ra: 12.345
+    dec: -3.21
+    redshift: 0.12
 auxiliary: {}
 environment:
   python: "3.12"
+  lsst_stack: "w_2026_12"
+adapter:
+  name: generic-smp
+  version: "0.1.0"
 engine:
   name: generic-smp
   version: "0.1.0"
+code_reference:
+  repository: git@github.com:desc/do-smp.git
+  commit: abc1234
+  tag: v0.1.0
+data_reference:
+  butler_collections:
+    - LSSTCam/runs/DP0.2
+  data_ids:
+    -
+      instrument: LSSTCam
+      visit: 123456
+      detector: 42
+      band: i
+  calibrations:
+    - bias-v1
+  templates:
+    - refs/template_i.fits
+  external_catalogs:
+    - catalogs/gaia.parquet
+  manifest_uri: manifests/inputs.json
+target_summary:
+  count: 1
+  classes:
+    - SN Ia
+  redshift_range:
+    min: 0.12
+    max: 0.12
+provenance:
+  immutable: true
+  rerun_capability: one-command
+  config_snapshot_uri: configs/run.yaml
+archival:
+  run_stub_uri: records/smp-run.stub.yaml
+  registry_uri: registry/index.json
+  archive_uri: archive/
+  citation_doi: 10.0000/example-doi
+extensions: {}
 outputs:
   light_curves: []
   model_fits: []

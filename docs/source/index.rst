@@ -8,8 +8,9 @@ DO-SMP documentation
 
 DO-SMP provides a small adapter-oriented scaffold for reproducible Scene
 Modeling Photometry runs. The current project focuses on generating a shared SMP
-run stub that records configuration, software metadata, targets, environment,
-and expected outputs in a portable YAML format.
+run stub that records configuration, Rubin/LSST input metadata, targets,
+environment, provenance, archival locations, and expected outputs in a portable
+YAML format.
 
 Use this documentation to get started with the CLI and the starter template
 included in the repository.
@@ -21,3 +22,5 @@ included in the repository.
 
    overview
    cli
+   runners
+   contributor_guide
